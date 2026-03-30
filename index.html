@@ -1,0 +1,386 @@
+import { useState, useMemo, useRef, useEffect } from "react";
+
+const SKILLS = [{"n":"a11y-audit","d":"Accessibility audit skill for scanning, fixing, and verifying WCAG 2.2 Level A and AA compliance across React, Next.js, Vue, Angular, Svelte, and plain HTML codebases. Use when aud","c":"engineering"},{"n":"ab-test-setup","d":"When the user wants to plan, design, or implement an A/B test or experiment. Also use when the user mentions \"A/B test,\" \"split test,\" \"experiment,\" \"test this change,\" \"variant co","c":"marketing"},{"n":"ad-creative","d":"When the user needs to generate, iterate, or scale ad creative for paid advertising. Use when they say 'write ad copy,' 'generate headlines,' 'create ad variations,' 'bulk creative","c":"marketing"},{"n":"agent-designer","d":"Use when the user asks to design multi-agent systems, create agent architectures, define agent communication patterns, or build autonomous agent workflows.","c":"agents"},{"n":"agent-protocol","d":"Inter-agent communication protocol for C-suite agent teams. Defines invocation syntax, loop prevention, isolation rules, and response formats. Use when C-suite agents need to query","c":"agents"},{"n":"agent-workflow-designer","d":"Agent Workflow Designer","c":"agents"},{"n":"agenthub","d":"Multi-agent collaboration plugin that spawns N parallel subagents competing on the same task via git worktree isolation. Agents work independently, results are evaluated by metric ","c":"agents"},{"n":"agile-product-owner","d":"Agile product ownership for backlog management and sprint execution. Covers user story writing, acceptance criteria, sprint planning, and velocity tracking. Use for writing user st","c":"product"},{"n":"ai-seo","d":"Optimize content to get cited by AI search engines — ChatGPT, Perplexity, Google AI Overviews, Claude, Gemini, Copilot. Use when you want your content to appear in AI-generated ans","c":"marketing"},{"n":"api-design-reviewer","d":"API Design Reviewer","c":"engineering"},{"n":"api-test-suite-builder","d":"Use when the user asks to generate API tests, create integration test suites, test REST endpoints, or build contract tests.","c":"engineering"},{"n":"app-store-optimization","d":"App Store Optimization (ASO) toolkit for researching keywords, analyzing competitor rankings, generating metadata suggestions, and improving app visibility on Apple App Store and G","c":"marketing"},{"n":"atlassian-admin","d":"Atlassian Administrator for managing and organizing Atlassian products (Jira, Confluence, Bitbucket, Trello), users, permissions, security, integrations, system configuration, and ","c":"project"},{"n":"atlassian-templates","d":"Atlassian Template and Files Creator/Modifier expert for creating, modifying, and managing Jira and Confluence templates, blueprints, custom layouts, reusable components, and stand","c":"project"},{"n":"autoresearch-agent","d":"Autonomous experiment loop that optimizes any file by a measurable metric. Inspired by Karpathy's autoresearch. The agent edits a target file, runs a fixed evaluation, keeps improv","c":"agents"},{"n":"aws-solution-architect","d":"Design AWS architectures for startups using serverless patterns and IaC templates. Use when asked to design serverless architecture, create CloudFormation templates, optimize AWS c","c":"engineering"},{"n":"azure-cloud-architect","d":"Design Azure architectures for startups and enterprises. Use when asked to design Azure infrastructure, create Bicep/ARM templates, optimize Azure costs, set up Azure DevOps pipeli","c":"engineering"},{"n":"board-deck-builder","d":"Assembles comprehensive board and investor update decks by pulling perspectives from all C-suite roles. Use when preparing board meetings, investor updates, quarterly business revi","c":"c-level"},{"n":"board-meeting","d":"Multi-agent board meeting protocol for strategic decisions. Runs a structured 6-phase deliberation: context loading, independent C-suite contributions (isolated, no cross-pollinati","c":"c-level"},{"n":"brand-guidelines","d":"When the user wants to apply, document, or enforce brand guidelines for any product or company. Also use when the user mentions 'brand guidelines,' 'brand colors,' 'typography,' 'l","c":"marketing"},{"n":"browser-automation","d":"Use when the user asks to automate browser tasks, scrape websites, fill forms, capture screenshots, extract structured data from web pages, or build web automation workflows. NOT f","c":"engineering"},{"n":"campaign-analytics","d":"Analyzes campaign performance with multi-touch attribution, funnel conversion analysis, and ROI calculation for marketing optimization. Use when analyzing marketing campaigns, ad p","c":"marketing"},{"n":"capa-officer","d":"CAPA system management for medical device QMS. Covers root cause analysis, corrective action planning, effectiveness verification, and CAPA metrics. Use for CAPA investigations, 5-","c":"compliance"},{"n":"ceo-advisor","d":"Executive leadership guidance for strategic decision-making, organizational development, and stakeholder management. Use when planning strategy, preparing board presentations, mana","c":"c-level"},{"n":"cfo-advisor","d":"Financial leadership for startups and scaling companies. Financial modeling, unit economics, fundraising strategy, cash management, and board financial packages. Use when building ","c":"c-level"},{"n":"change-management","d":"Framework for rolling out organizational changes without chaos. Covers the ADKAR model adapted for startups, communication templates, resistance patterns, and change fatigue manage","c":"c-level"},{"n":"chief-of-staff","d":"C-suite orchestration layer. Routes founder questions to the right advisor role(s), triggers multi-role board meetings for complex decisions, synthesizes outputs, and tracks decisi","c":"c-level"},{"n":"chro-advisor","d":"People leadership for scaling companies. Hiring strategy, compensation design, org structure, culture, and retention. Use when building hiring plans, designing comp frameworks, res","c":"c-level"},{"n":"churn-prevention","d":"Reduce voluntary and involuntary churn through cancel flow design, save offers, exit surveys, and dunning sequences. Use when designing or optimizing a cancel flow, building save o","c":"marketing"},{"n":"ci-cd-pipeline-builder","d":"CI/CD Pipeline Builder","c":"engineering"},{"n":"ciso-advisor","d":"Security leadership for growth-stage companies. Risk quantification in dollars, compliance roadmap (SOC 2/ISO 27001/HIPAA/GDPR), security architecture strategy, incident response l","c":"c-level"},{"n":"cmo-advisor","d":"Marketing leadership for scaling companies. Brand positioning, growth model design, marketing budget allocation, and marketing org design. Use when designing brand strategy, select","c":"c-level"},{"n":"code-reviewer","d":"Code review automation for TypeScript, JavaScript, Python, Go, Swift, Kotlin. Analyzes PRs for complexity and risk, checks code quality for SOLID violations and code smells, genera","c":"engineering"},{"n":"code-to-prd","d":"Converts codebases into Product Requirements Documents. Analyzes existing code to generate structured PRDs with feature extraction, user story generation, and technical spec creat","c":"product"},{"n":"codebase-onboarding","d":"Codebase Onboarding","c":"engineering"},{"n":"cold-email","d":"When the user wants to write, improve, or build a sequence of B2B cold outreach emails to prospects who haven't asked to hear from them. Use when the user mentions 'cold email,' 'c","c":"marketing"},{"n":"company-os","d":"The meta-framework for how a company runs — the connective tissue between all C-suite roles. Covers operating system selection (EOS, Scaling Up, OKR-native, hybrid), accountability","c":"c-level"},{"n":"competitive-intel","d":"Systematic competitor tracking that feeds CMO positioning, CRO battlecards, and CPO roadmap decisions. Use when analyzing competitors, building sales battlecards, tracking market m","c":"c-level"},{"n":"competitive-matrix","d":"Build competitive analysis matrices with scoring and gap analysis. Usage: /competitive-matrix analyze [options]","c":"product"},{"n":"competitive-teardown","d":"Analyzes competitor products and companies by synthesizing data from pricing pages, app store reviews, job postings, SEO signals, and social media into structured competitive intel","c":"product"},{"n":"competitor-alternatives","d":"When the user wants to create competitor comparison or alternative pages for SEO and sales enablement. Also use when the user mentions 'alternative page,' 'vs page,' 'competitor co","c":"marketing"},{"n":"confluence-expert","d":"Atlassian Confluence expert for creating and managing spaces, knowledge bases, and documentation. Configures space permissions and hierarchies, creates page templates with macros, ","c":"project"},{"n":"content-creator","d":"Full-spectrum content creation specialist. Writes blog posts, articles, guides, social content, and marketing copy. Adapts tone and format for any audience or platform.","c":"marketing"},{"n":"content-humanizer","d":"Makes AI-generated content sound genuinely human — not just cleaned up, but alive. Use when content feels robotic, uses too many AI clichés, lacks personality, or reads like it was","c":"marketing"},{"n":"content-production","d":"Full content production pipeline — takes a topic from blank page to published-ready piece. Use when you need to execute content: write a blog post, article, or guide end-to-end. Tr","c":"marketing"},{"n":"content-strategist","d":"Builds content engines that rank, convert, and compound. Thinks in systems — topic clusters, not individual posts. Every piece earns its place or gets killed.","c":"marketing"},{"n":"content-strategy","d":"When the user wants to plan a content strategy, decide what content to create, or figure out what topics to cover. Also use when the user mentions content strategy, what should I w","c":"marketing"},{"n":"context-engine","d":"Loads and manages company context for all C-suite advisor skills. Reads company-context.md, detects stale context, enriches context during conversations, and ensures all advisors w","c":"c-level"},{"n":"contract-and-proposal-writer","d":"Contract & Proposal Writer — drafts, reviews, and negotiates contracts, proposals, SOWs, NDAs, and business agreements.","c":"business"},{"n":"coo-advisor","d":"Operations leadership for scaling companies. Process design, OKR execution, operational cadence, and scaling playbooks. Use when designing operations, setting up OKRs, building pro","c":"c-level"},{"n":"copy-editing","d":"When the user wants to edit, review, or improve existing marketing copy. Also use when the user mentions 'edit this copy,' 'review my copy,' 'copy feedback,' 'proofread,' 'polish t","c":"marketing"},{"n":"copywriting","d":"When the user wants to write, rewrite, or improve marketing copy for any page — including homepage, landing pages, pricing pages, feature pages, about pages, or product pages. Also","c":"marketing"},{"n":"cpo-advisor","d":"Product leadership for scaling companies. Product vision, portfolio strategy, product-market fit, and product org design. Use when setting product vision, managing a product portfo","c":"c-level"},{"n":"cro-advisor","d":"Revenue leadership for B2B SaaS companies. Revenue forecasting, sales model design, pricing strategy, net revenue retention, and sales team scaling. Use when designing the revenue ","c":"c-level"},{"n":"cto-advisor","d":"Technical leadership guidance for engineering teams, architecture decisions, and technology strategy. Use when assessing technical debt, scaling engineering teams, evaluating techn","c":"c-level"},{"n":"culture-architect","d":"Build, measure, and evolve company culture as operational behavior — not wall posters. Covers mission/vision/values workshops, values-to-behaviors translation, culture code creatio","c":"c-level"},{"n":"customer-success-manager","d":"Monitors customer health, predicts churn risk, and identifies expansion opportunities using weighted scoring models for SaaS customer success. Use when analyzing customer accounts,","c":"business"},{"n":"database-designer","d":"Use when the user asks to design database schemas, plan data migrations, optimize queries, choose between SQL and NoSQL, or model data relationships.","c":"engineering"},{"n":"database-schema-designer","d":"Use when the user asks to create ERD diagrams, normalize database schemas, design table relationships, or plan schema migrations.","c":"engineering"},{"n":"decision-logger","d":"Two-layer memory architecture for board meeting decisions. Manages raw transcripts (Layer 1) and approved decisions (Layer 2). Use when logging decisions after a board meeting, rev","c":"c-level"},{"n":"dependency-auditor","d":"Dependency Auditor — scans, analyzes, and reports on project dependencies for security vulnerabilities, outdated packages, and licensing issues.","c":"engineering"},{"n":"devops-engineer","d":"Builds infrastructure that scales without babysitting. Automates everything worth automating. Monitors before it breaks. Treats clicking in consoles as a production incident waitin","c":"engineering"},{"n":"docker-development","d":"Docker and container development for Dockerfile optimization, docker-compose orchestration, multi-stage builds, and container security hardening.","c":"engineering"},{"n":"email-sequence","d":"When the user wants to create or optimize an email sequence, drip campaign, automated email flow, or lifecycle email program. Also use when the user mentions email sequence, drip c","c":"marketing"},{"n":"email-template-builder","d":"Email Template Builder — designs and builds responsive HTML email templates for marketing, transactional, and notification emails.","c":"marketing"},{"n":"env-secrets-manager","d":"Env & Secrets Manager — manages environment variables, secrets, and configuration across development, staging, and production environments.","c":"engineering"},{"n":"epic-design","d":"Epic Design — breaks large product initiatives into epics, features, and user stories with clear acceptance criteria and dependencies.","c":"product"},{"n":"executive-mentor","d":"Adversarial thinking partner for founders and executives. Stress-tests plans, prepares for brutal board meetings, dissects decisions with no good options, and forces honest post-mo","c":"c-level"},{"n":"experiment-designer","d":"Use when planning product experiments, writing testable hypotheses, estimating sample size, prioritizing tests, or interpreting A/B outcomes with practical statistical rigor.","c":"product"},{"n":"fda-consultant-specialist","d":"FDA regulatory consultant for medical device companies. Provides 510(k)/PMA/De Novo pathway guidance, QSR (21 CFR 820) compliance, HIPAA assessments, and device cybersecurity.","c":"compliance"},{"n":"finance-lead","d":"Startup CFO who builds models that survive contact with reality. Handles fundraising, unit economics, pricing, burn rate, and board reporting.","c":"business"},{"n":"financial-analyst","d":"Performs financial ratio analysis, DCF valuation, budget variance analysis, and rolling forecast construction for strategic decision-making.","c":"business"},{"n":"focused-fix","d":"Use when the user asks to fix, debug, or make a specific feature/module/area work end-to-end. Triggers: 'make X work', 'fix the Y feature', 'the Z module is broken'.","c":"engineering"},{"n":"form-cro","d":"When the user wants to optimize any form — lead capture, contact, demo request, application forms — for higher conversion rates.","c":"marketing"},{"n":"founder-coach","d":"Personal leadership development for founders and first-time CEOs. Covers founder archetype identification, delegation frameworks, energy management, CEO calendar audits.","c":"c-level"},{"n":"free-tool-strategy","d":"When the user wants to build a free tool for marketing — lead generation, SEO value, or brand awareness. Use when they mention engineering as marketing, free tool, calculator.","c":"marketing"},{"n":"gcp-cloud-architect","d":"Design GCP architectures for startups and enterprises. Use when asked to design Google Cloud infrastructure, deploy to GKE or Cloud Run, configure BigQuery pipelines.","c":"engineering"},{"n":"gdpr-dsgvo-expert","d":"GDPR and German DSGVO compliance automation. Scans codebases for privacy risks, generates DPIA documentation, tracks data subject rights requests.","c":"compliance"},{"n":"git-worktree-manager","d":"Git Worktree Manager — manages multiple working trees for parallel feature development and agent-based workflows.","c":"engineering"},{"n":"google-workspace-cli","d":"Google Workspace administration via the gws CLI. Automate Gmail, Drive, Sheets, Calendar, Docs, Chat, and Tasks. Run security audits, execute 43 built-in recipes.","c":"engineering"},{"n":"growth-marketer","d":"Growth marketing specialist for bootstrapped startups and indie hackers. Builds content engines, optimizes funnels, runs launch sequences, and finds scalable acquisition channels.","c":"marketing"},{"n":"helm-chart-builder","d":"Helm chart development for chart scaffolding, values design, template patterns, dependency management, and security hardening for Kubernetes workloads.","c":"engineering"},{"n":"incident-commander","d":"Incident Commander — leads real-time incident response, coordinates teams, manages communication, conducts post-mortems for production outages.","c":"engineering"},{"n":"information-security-manager-iso27001","d":"ISO 27001 ISMS implementation and cybersecurity governance for HealthTech and MedTech companies. ISMS design, security risk assessment, control implementation.","c":"compliance"},{"n":"internal-narrative","d":"Build and maintain one coherent company story across all audiences — employees, investors, customers, candidates, and partners. Detects narrative contradictions.","c":"c-level"},{"n":"interview-system-designer","d":"Design interview processes, create hiring pipelines, calibrate interview loops, generate interview questions, design competency frameworks.","c":"engineering"},{"n":"intl-expansion","d":"International market expansion strategy. Market selection, entry modes, localization, regulatory compliance, and go-to-market by region.","c":"c-level"},{"n":"isms-audit-expert","d":"Information Security Management System (ISMS) audit expert for ISO 27001 compliance verification, security control assessment, and certification support.","c":"compliance"},{"n":"jira-expert","d":"Atlassian Jira expert for creating and managing projects, JQL queries, workflows, custom fields, automation, reporting, and all Jira features.","c":"project"},{"n":"landing-page-generator","d":"Generates high-converting landing pages as complete Next.js/React (TSX) components with Tailwind CSS. Creates hero sections, feature grids, pricing tables, FAQ accordions.","c":"product"},{"n":"launch-strategy","d":"When the user wants to plan a product launch, feature announcement, or release strategy. Also use when the user mentions launch, Product Hunt, feature release, announcement.","c":"marketing"},{"n":"ma-playbook","d":"M&A strategy for acquiring companies or being acquired. Due diligence, valuation, integration, and deal structure.","c":"c-level"},{"n":"marketing-context","d":"Create and maintain the marketing context document that all marketing skills read before starting. Brand voice, ICP, messaging, and competitive positioning.","c":"marketing"},{"n":"marketing-demand-acquisition","d":"Creates demand generation campaigns, optimizes paid ad spend across LinkedIn, Google, and Meta, develops SEO strategies for Series A+ startups.","c":"marketing"},{"n":"marketing-ideas","d":"When the user needs marketing ideas, inspiration, or strategies for their SaaS or software product. Growth ideas, how to market, creative campaigns.","c":"marketing"},{"n":"marketing-ops","d":"Central router for the marketing skill ecosystem. Orchestrates multi-skill campaigns, coordinates across content, SEO, paid, and lifecycle marketing.","c":"marketing"},{"n":"marketing-psychology","d":"When the user wants to apply psychological principles, mental models, or behavioral science to marketing. Cognitive biases, social proof, scarcity, urgency.","c":"marketing"},{"n":"marketing-strategy-pmm","d":"Product marketing skill for positioning, GTM strategy, competitive intelligence, and product launches.","c":"marketing"},{"n":"mcp-server-builder","d":"MCP Server Builder — designs and implements Model Context Protocol servers for Claude and other AI agents.","c":"engineering"},{"n":"mdr-745-specialist","d":"EU MDR 2017/745 compliance specialist for medical device classification, technical documentation, clinical evidence, and post-market surveillance.","c":"compliance"},{"n":"migration-architect","d":"Migration Architect — plans and executes system migrations: database, cloud, framework, and platform migrations with risk mitigation.","c":"engineering"},{"n":"monorepo-navigator","d":"Monorepo Navigator — helps navigate, organize, and optimize large monorepos with multiple packages, shared dependencies, and build systems.","c":"engineering"},{"n":"observability-designer","d":"Observability Designer — designs monitoring, logging, tracing, and alerting systems for production applications.","c":"engineering"},{"n":"okr","d":"Generate OKR cascades from company strategy to team objectives. Usage: /okr generate <strategy>","c":"project"},{"n":"onboarding-cro","d":"When the user wants to optimize post-signup onboarding, user activation, first-run experience, or time-to-value. Onboarding flow, activation rate, time-to-value.","c":"marketing"},{"n":"org-health-diagnostic","d":"Cross-functional organizational health check combining signals from all C-suite roles. Scores 8 dimensions with traffic-light scale and drill-down recommendations.","c":"c-level"},{"n":"page-cro","d":"When the user wants to optimize, improve, or increase conversions on any marketing page — homepage, landing pages, pricing pages, feature pages, or blog posts.","c":"marketing"},{"n":"paid-ads","d":"When the user wants help with paid advertising campaigns on Google Ads, Meta, LinkedIn, Twitter/X, or other ad platforms. PPC, paid social, ad strategy.","c":"marketing"},{"n":"paywall-upgrade-cro","d":"When the user wants to create or optimize in-app paywalls, upgrade screens, upsell modals, or feature gates.","c":"marketing"},{"n":"performance-profiler","d":"Performance Profiler — profiles and optimizes application performance: CPU, memory, network, and rendering bottlenecks.","c":"engineering"},{"n":"playwright-pro","d":"Production-grade Playwright testing toolkit. Use when the user mentions Playwright tests, end-to-end testing, browser automation, fixing flaky tests, test migration.","c":"engineering"},{"n":"popup-cro","d":"When the user wants to create or optimize popups, modals, overlays, slide-ins, or banners for conversion purposes.","c":"marketing"},{"n":"postmortem","d":"Postmortem — honest analysis of what went wrong in a production incident, project failure, or missed goal. Blameless and action-oriented.","c":"engineering"},{"n":"pr-review-expert","d":"Use when the user asks to review pull requests, analyze code changes, check for security issues in PRs, or assess code quality of diffs.","c":"engineering"},{"n":"prd","d":"Quick PRD generation. Generates complete Product Requirements Documents from a feature description or problem statement.","c":"project"},{"n":"pricing-strategy","d":"Design, optimize, and communicate SaaS pricing — tier structure, value metrics, pricing pages, and price increase strategy.","c":"marketing"},{"n":"product-analytics","d":"Use when defining product KPIs, building metric dashboards, running cohort or retention analysis, or interpreting feature adoption trends.","c":"product"},{"n":"product-discovery","d":"Use when validating product opportunities, mapping assumptions, planning discovery sprints, or testing problem-solution fit before committing delivery resources.","c":"product"},{"n":"product-manager","d":"Ships outcomes, not features. Writes specs engineers actually read. Prioritizes ruthlessly. Operates at the intersection of user needs, business goals, and technical reality.","c":"product"},{"n":"product-manager-toolkit","d":"Comprehensive toolkit for product managers including RICE prioritization, customer interview analysis, PRD templates, discovery frameworks, and go-to-market strategies.","c":"product"},{"n":"product-strategist","d":"Strategic product leadership toolkit covering OKR cascade generation, quarterly planning, competitive landscape analysis, product vision documents, and team scaling.","c":"product"},{"n":"programmatic-seo","d":"When the user wants to create SEO-driven pages at scale using templates and data. Programmatic SEO, template pages, directory pages.","c":"marketing"},{"n":"project-health","d":"Portfolio health dashboard and risk matrix analysis for project management.","c":"project"},{"n":"prompt-engineer-toolkit","d":"Analyzes and rewrites prompts for better AI output, creates reusable prompt templates, structures end-to-end AI workflows.","c":"agents"},{"n":"qms-audit-expert","d":"ISO 13485 internal audit expertise for medical device QMS. Audit planning, execution, nonconformity classification, and CAPA verification.","c":"compliance"},{"n":"quality-documentation-manager","d":"Document control system management for medical device QMS. Document numbering, version control, change management, and 21 CFR Part 11 compliance.","c":"compliance"},{"n":"quality-manager-qmr","d":"Senior Quality Manager Responsible Person for HealthTech and MedTech companies. Quality system governance, management review leadership, regulatory compliance.","c":"compliance"},{"n":"quality-manager-qms-iso13485","d":"ISO 13485 Quality Management System implementation and maintenance for medical device organizations.","c":"compliance"},{"n":"rag-architect","d":"Use when the user asks to design RAG pipelines, optimize retrieval strategies, choose embedding models, implement vector search, or build knowledge retrieval systems.","c":"engineering"},{"n":"referral-program","d":"When the user wants to design, launch, or optimize a referral or affiliate program. Word of mouth, refer a friend, viral loops.","c":"marketing"},{"n":"regulatory-affairs-head","d":"Senior Regulatory Affairs Manager for HealthTech and MedTech. Prepares FDA 510(k), De Novo, PMA submission packages; analyzes regulatory pathways for new medical devices.","c":"compliance"},{"n":"release-manager","d":"Use when the user asks to plan releases, manage changelogs, coordinate deployments, create release branches, or automate versioning.","c":"engineering"},{"n":"research-summarizer","d":"Structured research summarization for academic papers, web articles, reports, and documentation. Extracts key findings, generates comparative analysis.","c":"product"},{"n":"retro","d":"Analyze sprint retrospectives for patterns and action item tracking.","c":"project"},{"n":"revenue-operations","d":"Analyzes sales pipeline health, revenue forecasting accuracy, and go-to-market efficiency metrics for SaaS revenue optimization.","c":"business"},{"n":"rice","d":"RICE feature prioritization with scoring and capacity planning.","c":"project"},{"n":"risk-management-specialist","d":"Medical device risk management specialist implementing ISO 14971 throughout product lifecycle. Risk analysis, evaluation, control, and post-production information.","c":"compliance"},{"n":"roadmap-communicator","d":"Use when preparing roadmap narratives, release notes, changelogs, or stakeholder updates tailored for executives, engineering teams, and customers.","c":"product"},{"n":"runbook-generator","d":"Runbook Generator — creates operational runbooks for deployment, incident response, maintenance, and on-call procedures.","c":"engineering"},{"n":"saas-health","d":"Calculate SaaS health metrics (ARR, MRR, churn, CAC, LTV, NRR) and benchmark against industry standards.","c":"business"},{"n":"saas-metrics-coach","d":"SaaS Metrics Coach — teaches and analyzes SaaS metrics, unit economics, and business model health for founders and operators.","c":"business"},{"n":"saas-scaffolder","d":"Generates complete, production-ready SaaS project boilerplate including authentication, database schemas, billing integration, API routes, and a working dashboard.","c":"product"},{"n":"sales-engineer","d":"Analyzes RFP/RFI responses for coverage gaps, builds competitive feature comparison matrices, and plans proof-of-concept engagements for pre-sales engineering.","c":"business"},{"n":"scenario-war-room","d":"Cross-functional what-if modeling for cascading multi-variable scenarios. Models compound adversity across all business functions simultaneously.","c":"c-level"},{"n":"schema-markup","d":"When the user wants to implement, audit, or validate structured data (schema markup) on their website. Structured data, schema.org, JSON-LD, rich snippets.","c":"marketing"},{"n":"scrum-master","d":"Advanced Scrum Master for data-driven agile team analysis and coaching. Sprint planning, velocity tracking, retrospectives, standup facilitation.","c":"project"},{"n":"security-pen-testing","d":"Use when the user asks to perform security audits, penetration testing, vulnerability scanning, OWASP Top 10 checks, or offensive security assessments.","c":"engineering"},{"n":"self-improving-agent","d":"Curates Claude Code auto-memory into durable project knowledge. Analyzes MEMORY.md for patterns, promotes proven learnings to CLAUDE.md and rules.","c":"agents"},{"n":"senior-architect","d":"Design system architecture, evaluate microservices vs monolith, create architecture diagrams, analyze dependencies, choose technology stacks.","c":"engineering"},{"n":"senior-backend","d":"Designs and implements backend systems including REST APIs, microservices, database architectures, authentication flows, and security hardening.","c":"engineering"},{"n":"senior-computer-vision","d":"Computer vision engineering for object detection, image segmentation, and visual AI systems. CNN and Vision Transformer architectures, YOLO/Faster R-CNN/DETR.","c":"engineering"},{"n":"senior-data-engineer","d":"Data engineering for building scalable data pipelines, ETL/ELT systems, and data infrastructure. Python, SQL, Spark, Airflow, dbt, Kafka.","c":"engineering"},{"n":"senior-data-scientist","d":"World-class senior data scientist specialising in statistical modeling, experiment design, causal inference, and predictive analytics. A/B testing, ML modeling.","c":"engineering"},{"n":"senior-devops","d":"Comprehensive DevOps for CI/CD, infrastructure automation, containerization, and cloud platforms (AWS, GCP, Azure). Pipeline setup, IaC, deployments.","c":"engineering"},{"n":"senior-frontend","d":"Frontend development for React, Next.js, TypeScript, and Tailwind CSS applications. Building React components, optimizing Next.js performance, analyzing bundle sizes.","c":"engineering"},{"n":"senior-fullstack","d":"Fullstack development toolkit with project scaffolding for Next.js, FastAPI, MERN, and Django stacks, code quality analysis, and stack selection guidance.","c":"engineering"},{"n":"senior-ml-engineer","d":"ML engineering for productionizing models, building MLOps pipelines, and integrating LLMs. Model deployment, feature stores, drift monitoring, RAG systems.","c":"engineering"},{"n":"senior-pm","d":"Senior Project Manager for enterprise software, SaaS, and digital transformation. Portfolio management, quantitative risk analysis, resource optimization.","c":"project"},{"n":"senior-prompt-engineer","d":"Optimize prompts, design prompt templates, evaluate LLM outputs, build agentic systems, implement RAG, create few-shot examples.","c":"agents"},{"n":"senior-qa","d":"Generates unit tests, integration tests, and E2E tests for React/Next.js applications. Jest + React Testing Library, Istanbul/LCOV coverage analysis.","c":"engineering"},{"n":"senior-secops","d":"Senior SecOps for application security, vulnerability management, compliance verification, and secure development practices. SAST/DAST scans, CVE remediation.","c":"engineering"},{"n":"senior-security","d":"Security engineering toolkit for threat modeling, vulnerability analysis, secure architecture, and penetration testing. STRIDE analysis, OWASP guidance.","c":"engineering"},{"n":"seo-audit","d":"When the user wants to audit, review, or diagnose SEO issues on their site. SEO audit, technical SEO, why am I not ranking, on-page SEO.","c":"marketing"},{"n":"signup-flow-cro","d":"When the user wants to optimize signup, registration, account creation, or trial activation flows. Signup conversions, registration friction.","c":"marketing"},{"n":"site-architecture","d":"When the user wants to audit, redesign, or plan their website's structure, URL hierarchy, navigation design, or internal linking strategy.","c":"marketing"},{"n":"skill-security-auditor","d":"Skill Security Auditor — audits AI agent skills and prompts for security vulnerabilities, prompt injection risks, and policy violations.","c":"compliance"},{"n":"snowflake-development","d":"Use when writing Snowflake SQL, building data pipelines with Dynamic Tables or Streams/Tasks, using Cortex AI functions, creating Cortex Agents, writing Snowpark Python.","c":"engineering"},{"n":"soc2-compliance","d":"Use when the user asks to prepare for SOC 2 audits, map Trust Service Criteria, build control matrices, collect audit evidence, or assess SOC 2 Type I vs Type II.","c":"compliance"},{"n":"social-content","d":"When the user wants help creating, scheduling, or optimizing social media content for LinkedIn, Twitter/X, Instagram, TikTok, Facebook, or other platforms.","c":"marketing"},{"n":"social-media-analyzer","d":"Social media campaign analysis and performance tracking. Engagement rates, ROI, and benchmarks across platforms.","c":"marketing"},{"n":"social-media-manager","d":"When the user wants to develop social media strategy, plan content calendars, manage community engagement, or grow their social presence across platforms.","c":"marketing"},{"n":"solo-founder","d":"Your co-founder who doesn't exist yet. Covers product, engineering, marketing, and strategy for one-person startups.","c":"business"},{"n":"spec-driven-workflow","d":"Use when the user asks to write specs before code, define acceptance criteria, plan features before implementation, or follow spec-first development.","c":"engineering"},{"n":"sprint-health","d":"Sprint health scoring and velocity analysis for agile teams.","c":"project"},{"n":"sprint-plan","d":"Sprint planning shortcut — generates sprint plans from goals and team capacity.","c":"project"},{"n":"sql-database-assistant","d":"Use when the user asks to write SQL queries, optimize database performance, generate migrations, explore database schemas, or work with ORMs.","c":"engineering"},{"n":"startup-cto","d":"Technical co-founder who's been through startups. Makes architecture decisions, selects tech stacks, builds engineering culture, and prepares for scale.","c":"engineering"},{"n":"strategic-alignment","d":"Cascades strategy from boardroom to individual contributor. Detects and fixes misalignment between company goals and team execution.","c":"c-level"},{"n":"stripe-integration-expert","d":"Stripe Integration Expert — implements Stripe payments, subscriptions, webhooks, billing portals, and compliance for SaaS products.","c":"engineering"},{"n":"tdd","d":"Generate tests, analyze coverage, and run TDD workflows. Test-driven development automation.","c":"engineering"},{"n":"tdd-guide","d":"Test-driven development for writing unit tests, generating test fixtures and mocks, analyzing coverage gaps, and guiding red-green-refactor workflows.","c":"engineering"},{"n":"tech-debt","d":"Scan, prioritize, and report technical debt across codebases.","c":"engineering"},{"n":"tech-debt-tracker","d":"Scan codebases for technical debt, score severity, track trends, and generate prioritized remediation plans.","c":"engineering"},{"n":"tech-stack-evaluator","d":"Technology stack evaluation and comparison with TCO analysis, security assessment, and ecosystem health scoring.","c":"engineering"},{"n":"terraform-patterns","d":"Terraform infrastructure-as-code for module design patterns, state management strategies, provider configuration, and security hardening.","c":"engineering"},{"n":"ui-design-system","d":"UI design system toolkit including design token generation, component documentation, responsive design calculations, and developer handoff tools.","c":"product"},{"n":"user-story","d":"Generate user stories with acceptance criteria and sprint planning.","c":"project"},{"n":"ux-researcher-designer","d":"UX research and design toolkit including data-driven persona generation, journey mapping, usability testing frameworks, and research synthesis.","c":"product"},{"n":"x-twitter-growth","d":"X/Twitter growth engine for building audience, crafting viral content, and analyzing engagement.","c":"marketing"}];
+
+const CAT_META = {
+  engineering: { label: "Engineering", icon: "⚙️", color: "#3b82f6" },
+  marketing:   { label: "Marketing",   icon: "📢", color: "#f59e0b" },
+  "c-level":   { label: "C-Level",     icon: "👔", color: "#8b5cf6" },
+  product:     { label: "Product",     icon: "📦", color: "#10b981" },
+  compliance:  { label: "Compliance",  icon: "🔒", color: "#ef4444" },
+  business:    { label: "Business",    icon: "💼", color: "#f97316" },
+  project:     { label: "Project",     icon: "📋", color: "#06b6d4" },
+  agents:      { label: "AI Agents",   icon: "🤖", color: "#ec4899" },
+};
+
+function formatName(n) {
+  return n.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
+function SkillChat({ skill, onClose }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const endRef = useRef(null);
+  const cat = CAT_META[skill.c] || { color: "#6b7280", icon: "🔧" };
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  async function send() {
+    const text = input.trim();
+    if (!text || loading) return;
+    setInput("");
+    const newMessages = [...messages, { role: "user", content: text }];
+    setMessages(newMessages);
+    setLoading(true);
+
+    const systemPrompt = `You are an expert AI assistant operating as the "${formatName(skill.n)}" skill.
+
+SKILL: ${formatName(skill.n)}
+DESCRIPTION: ${skill.d}
+CATEGORY: ${skill.c}
+
+You embody the full expertise of this skill. Respond as a top-tier specialist in this domain. Be direct, practical, and immediately useful. Provide actionable insights, frameworks, and concrete recommendations. Avoid generic advice — give expert-level responses that reflect deep domain knowledge.
+
+When appropriate, use structured formats (bullet points, numbered lists, headers) to organize complex information clearly.`;
+
+    try {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          system: systemPrompt,
+          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
+        }),
+      });
+      const data = await response.json();
+      const reply = data.content?.find(b => b.type === "text")?.text || "No response.";
+      setMessages(prev => [...prev, { role: "assistant", content: reply }]);
+    } catch (e) {
+      setMessages(prev => [...prev, { role: "assistant", content: "Error: " + e.message }]);
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 100,
+      background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      padding: "16px",
+    }}>
+      <div style={{
+        width: "100%", maxWidth: "680px", height: "80vh",
+        background: "#0f1117", border: `1px solid ${cat.color}40`,
+        borderRadius: "16px", display: "flex", flexDirection: "column",
+        overflow: "hidden", boxShadow: `0 0 60px ${cat.color}20`,
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "16px 20px",
+          borderBottom: `1px solid ${cat.color}30`,
+          background: `linear-gradient(135deg, ${cat.color}15, transparent)`,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: "10px",
+              background: `${cat.color}20`, border: `1px solid ${cat.color}40`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "18px",
+            }}>{cat.icon}</div>
+            <div>
+              <div style={{ color: "#fff", fontWeight: 700, fontSize: "15px" }}>{formatName(skill.n)}</div>
+              <div style={{ color: cat.color, fontSize: "11px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em" }}>{CAT_META[skill.c]?.label || skill.c}</div>
+            </div>
+          </div>
+          <button onClick={onClose} style={{
+            background: "none", border: "none", cursor: "pointer",
+            color: "#6b7280", fontSize: "20px", padding: "4px 8px",
+            borderRadius: "6px", transition: "color 0.2s",
+          }}
+          onMouseEnter={e => e.target.style.color = "#fff"}
+          onMouseLeave={e => e.target.style.color = "#6b7280"}
+          >✕</button>
+        </div>
+
+        {/* Messages */}
+        <div style={{
+          flex: 1, overflowY: "auto", padding: "20px",
+          display: "flex", flexDirection: "column", gap: "16px",
+        }}>
+          {messages.length === 0 && (
+            <div style={{
+              flex: 1, display: "flex", flexDirection: "column",
+              alignItems: "center", justifyContent: "center", gap: "12px", opacity: 0.5,
+            }}>
+              <div style={{ fontSize: "40px" }}>{cat.icon}</div>
+              <div style={{ color: "#9ca3af", textAlign: "center", fontSize: "14px" }}>
+                <strong style={{ color: "#e5e7eb" }}>{formatName(skill.n)}</strong> está activo.<br />
+                Escribe tu pregunta para comenzar.
+              </div>
+            </div>
+          )}
+          {messages.map((m, i) => (
+            <div key={i} style={{
+              display: "flex",
+              justifyContent: m.role === "user" ? "flex-end" : "flex-start",
+            }}>
+              <div style={{
+                maxWidth: "85%",
+                padding: "12px 16px",
+                borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
+                background: m.role === "user" ? cat.color : "#1a1d27",
+                color: m.role === "user" ? "#fff" : "#e5e7eb",
+                fontSize: "14px", lineHeight: 1.6,
+                border: m.role === "assistant" ? `1px solid ${cat.color}20` : "none",
+                whiteSpace: "pre-wrap",
+              }}>
+                {m.content}
+              </div>
+            </div>
+          ))}
+          {loading && (
+            <div style={{ display: "flex", justifyContent: "flex-start" }}>
+              <div style={{
+                padding: "12px 16px", borderRadius: "16px 16px 16px 4px",
+                background: "#1a1d27", border: `1px solid ${cat.color}20`,
+                display: "flex", gap: "4px", alignItems: "center",
+              }}>
+                {[0,1,2].map(i => (
+                  <div key={i} style={{
+                    width: 6, height: 6, borderRadius: "50%",
+                    background: cat.color, opacity: 0.7,
+                    animation: `bounce 1s ${i * 0.15}s infinite`,
+                  }} />
+                ))}
+              </div>
+            </div>
+          )}
+          <div ref={endRef} />
+        </div>
+
+        {/* Input */}
+        <div style={{
+          padding: "16px 20px",
+          borderTop: `1px solid ${cat.color}20`,
+          display: "flex", gap: "10px",
+        }}>
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && !e.shiftKey && send()}
+            placeholder={`Pregunta al ${formatName(skill.n)}...`}
+            style={{
+              flex: 1, background: "#1a1d27",
+              border: `1px solid ${cat.color}30`, borderRadius: "10px",
+              padding: "10px 14px", color: "#e5e7eb", fontSize: "14px",
+              outline: "none",
+            }}
+            onFocus={e => e.target.style.borderColor = cat.color}
+            onBlur={e => e.target.style.borderColor = `${cat.color}30`}
+            autoFocus
+          />
+          <button
+            onClick={send}
+            disabled={loading || !input.trim()}
+            style={{
+              background: cat.color, border: "none", borderRadius: "10px",
+              width: 42, height: 42, cursor: loading ? "not-allowed" : "pointer",
+              opacity: loading || !input.trim() ? 0.5 : 1,
+              color: "#fff", fontSize: "16px", flexShrink: 0,
+            }}
+          >→</button>
+        </div>
+      </div>
+      <style>{`
+        @keyframes bounce {
+          0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)}
+        }
+      `}</style>
+    </div>
+  );
+}
+
+export default function App() {
+  const [search, setSearch] = useState("");
+  const [cat, setCat] = useState("all");
+  const [active, setActive] = useState(null);
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return SKILLS.filter(s =>
+      (cat === "all" || s.c === cat) &&
+      (!q || s.n.includes(q) || s.d.toLowerCase().includes(q))
+    );
+  }, [search, cat]);
+
+  const counts = useMemo(() => {
+    const c = { all: SKILLS.length };
+    SKILLS.forEach(s => { c[s.c] = (c[s.c] || 0) + 1; });
+    return c;
+  }, []);
+
+  return (
+    <div style={{
+      minHeight: "100vh", background: "#0a0c10",
+      fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif",
+      color: "#e5e7eb",
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: "32px 24px 0",
+        background: "linear-gradient(180deg, #0f1117 0%, transparent 100%)",
+      }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "flex-end", gap: "12px", marginBottom: "6px" }}>
+            <h1 style={{ margin: 0, fontSize: "28px", fontWeight: 800, color: "#fff" }}>
+              Claude Skills
+            </h1>
+            <span style={{
+              fontSize: "12px", fontWeight: 600, color: "#6b7280",
+              background: "#1a1d27", border: "1px solid #2d3748",
+              borderRadius: "20px", padding: "3px 10px", marginBottom: "5px",
+            }}>
+              {SKILLS.length} skills · github.com/alirezarezvani/claude-skills
+            </span>
+          </div>
+          <p style={{ margin: "0 0 24px", color: "#6b7280", fontSize: "14px" }}>
+            Selecciona un skill para activar un asistente especializado con IA.
+          </p>
+
+          {/* Search */}
+          <div style={{ position: "relative", marginBottom: "20px" }}>
+            <span style={{
+              position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)",
+              color: "#4b5563", fontSize: "15px",
+            }}>🔍</span>
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar skills..."
+              style={{
+                width: "100%", boxSizing: "border-box",
+                background: "#1a1d27", border: "1px solid #2d3748",
+                borderRadius: "12px", padding: "12px 14px 12px 40px",
+                color: "#e5e7eb", fontSize: "14px", outline: "none",
+              }}
+              onFocus={e => e.target.style.borderColor = "#4b5563"}
+              onBlur={e => e.target.style.borderColor = "#2d3748"}
+            />
+          </div>
+
+          {/* Category tabs */}
+          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", paddingBottom: "20px" }}>
+            <button
+              onClick={() => setCat("all")}
+              style={{
+                padding: "6px 14px", borderRadius: "20px", border: "1px solid",
+                cursor: "pointer", fontSize: "13px", fontWeight: 600,
+                borderColor: cat === "all" ? "#fff" : "#2d3748",
+                background: cat === "all" ? "#fff" : "transparent",
+                color: cat === "all" ? "#000" : "#9ca3af",
+                transition: "all 0.15s",
+              }}
+            >All ({counts.all})</button>
+            {Object.entries(CAT_META).map(([key, meta]) => (
+              <button
+                key={key}
+                onClick={() => setCat(key)}
+                style={{
+                  padding: "6px 14px", borderRadius: "20px", border: "1px solid",
+                  cursor: "pointer", fontSize: "13px", fontWeight: 600,
+                  borderColor: cat === key ? meta.color : "#2d3748",
+                  background: cat === key ? `${meta.color}20` : "transparent",
+                  color: cat === key ? meta.color : "#9ca3af",
+                  transition: "all 0.15s",
+                }}
+              >{meta.icon} {meta.label} ({counts[key] || 0})</button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px 40px" }}>
+        <div style={{ marginBottom: "12px", color: "#4b5563", fontSize: "13px" }}>
+          {filtered.length} skills encontrados
+        </div>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+          gap: "12px",
+        }}>
+          {filtered.map(skill => {
+            const meta = CAT_META[skill.c] || { color: "#6b7280", icon: "🔧", label: skill.c };
+            return (
+              <div
+                key={skill.n}
+                onClick={() => setActive(skill)}
+                style={{
+                  background: "#0f1117", border: "1px solid #1e2130",
+                  borderRadius: "12px", padding: "16px", cursor: "pointer",
+                  transition: "all 0.15s", position: "relative", overflow: "hidden",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.borderColor = `${meta.color}50`;
+                  e.currentTarget.style.background = `${meta.color}08`;
+                  e.currentTarget.style.transform = "translateY(-1px)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.borderColor = "#1e2130";
+                  e.currentTarget.style.background = "#0f1117";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: "8px", flexShrink: 0,
+                    background: `${meta.color}15`, border: `1px solid ${meta.color}30`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "16px",
+                  }}>{meta.icon}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      fontSize: "14px", fontWeight: 700, color: "#f3f4f6",
+                      marginBottom: "4px", lineHeight: 1.3,
+                    }}>{formatName(skill.n)}</div>
+                    <div style={{
+                      fontSize: "11px", color: meta.color, fontWeight: 600,
+                      textTransform: "uppercase", letterSpacing: "0.04em",
+                      marginBottom: "6px",
+                    }}>{meta.label}</div>
+                    <div style={{
+                      fontSize: "12px", color: "#6b7280", lineHeight: 1.5,
+                      display: "-webkit-box", WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical", overflow: "hidden",
+                    }}>{skill.d}</div>
+                  </div>
+                </div>
+                <div style={{
+                  position: "absolute", bottom: 12, right: 12,
+                  color: "#374151", fontSize: "14px", transition: "color 0.15s",
+                }}>→</div>
+              </div>
+            );
+          })}
+        </div>
+        {filtered.length === 0 && (
+          <div style={{
+            textAlign: "center", padding: "60px 20px",
+            color: "#4b5563", fontSize: "15px",
+          }}>
+            <div style={{ fontSize: "40px", marginBottom: "12px" }}>🔍</div>
+            No se encontraron skills para "<strong style={{color:"#9ca3af"}}>{search}</strong>"
+          </div>
+        )}
+      </div>
+
+      {active && <SkillChat skill={active} onClose={() => setActive(null)} />}
+    </div>
+  );
+}
